@@ -1,0 +1,28 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <omp.h>
+
+#define M 1000
+#define N 1000
+#define K 1000
+
+int A[M][K], B[K][N], C[M][N];
+
+int main() {
+   // initialize A and B matrices
+   for (int i = 0; i < M; i++) {
+      for (int j = 0; j < K; j++) {
+         A[i][j] = i + j;
+      }
+   }
+
+   for (int i = 0; i < K; i++) {
+      for (int j = 0; j < N; j++) {
+         B[i][j] = i + j;
+      }
+   }
+
+   // parallelize matrix multiplication
+   #pragma omp parallel for collapse(2)
+   for (int i = 0; i < M; i++) {
+      for (int j

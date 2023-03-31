@@ -1,0 +1,80 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+
+#define M 1000
+#define N 1000
+#define K 1000
+#define NUM_THREADS 4
+
+int A[M][K], B[K][N], C[M][N];
+pthread_t threads[NUM_THREADS];
+
+struct thread_data {
+   int thread_id;
+   int start_row;
+   int end_row;
+};
+
+void *matrix_multiply(void *arg) {
+   struct thread_data *data = (struct thread_data *) arg;
+   int start_row = data->start_row;
+   int end_row = data->end_row;
+
+   for (int i = start_row; i < end_row; i++) {
+      for (int j = 0; j < N; j++) {
+         for (int k = 0; k < K; k++) {
+            C[i][j] += A[i][k] * B[k][j];
+         }
+      }
+   }
+
+   pthread_exit(NULL);
+}
+
+int main() {
+   // initialize A and B matrices
+   for (int i = 0; i < M; i++) {
+      for (int j = 0; j < K; j++) {
+         A[i][j] = i + j;
+      }
+   }
+
+   for (int i = 0; i < K; i++) {
+      for (int j = 0; j < N; j++) {
+         B[i][j] = i + j;
+      }
+   }
+
+   // create threads
+   int rows_per_thread = M / NUM_THREADS;
+   int start_row = 0;
+   int end_row = rows_per_thread;
+
+   for (int i = 0; i < NUM_THREADS; i++) {
+      struct thread_data *data = (struct thread_data *) malloc(sizeof(struct thread_data));
+      data->thread_id = i;
+      data->start_row = start_row;
+      data->end_row = end_row;
+
+      pthread_create(&threads[i], NULL, matrix_multiply, (void *) data);
+
+      start_row += rows_per_thread;
+      end_row += rows_per_thread;
+   }
+
+   // wait for threads to complete
+   for (int i = 0; i < NUM_THREADS; i++) {
+      pthread_join(threads[i], NULL);
+   }
+
+   // print C matrix
+   for (int i = 0; i < M; i++) {
+      for (int j = 0; j < N; j++) {
+         printf("%d ", C[i][j]);
+      }
+      printf("\n");
+   }
+
+   pthread_exit(NULL);
+}
